@@ -83,7 +83,8 @@ namespace RNBO {
 				const nlohmann::json& patcher_description,
 				const nlohmann::json& presets,
 				const RNBO::BinaryData& data,
-				JuceAudioParameterFactory* paramFactory = nullptr
+				JuceAudioParameterFactory* paramFactory = nullptr,
+                BusesProperties* busesProperties = nullptr
 		);
 		~JuceAudioProcessor() override;
 

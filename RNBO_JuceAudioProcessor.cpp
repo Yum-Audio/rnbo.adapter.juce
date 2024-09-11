@@ -99,14 +99,17 @@ JuceAudioProcessor::JuceAudioProcessor(
 		const nlohmann::json& patcher_desc,
 		const nlohmann::json& presets,
 		const RNBO::BinaryData& data,
-		JuceAudioParameterFactory* paramFactory
+		JuceAudioParameterFactory* paramFactory,
+        BusesProperties* busesProperties
 		)
 	: CoreObjectHolder(this)
 	, AudioProcessor(
 #ifdef PLUGIN_BUSES_PROPERTIES
 		PLUGIN_BUSES_PROPERTIES
 #else
-		JuceAudioProcessor::makeBusesPropertiesForRNBOObject(_rnboObject, patcher_desc)
+        busesProperties ?
+            *busesProperties :
+		    JuceAudioProcessor::makeBusesPropertiesForRNBOObject(_rnboObject, patcher_desc)
 #endif
 	)
 	, Thread("fileLoadAndDealloc")
