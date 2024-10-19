@@ -147,31 +147,13 @@ namespace RNBO {
 		TimeConverter preProcess(juce::MidiBuffer& midiMessages);
 		void postProcess(TimeConverter& timeConverter, juce::MidiBuffer& midiMessages);
 
-		class SyncEventHandler : public RNBO::EventHandler
-		{
-		public:
-			SyncEventHandler(JuceAudioProcessor& owner)
-			: _owner(owner)
-			{}
-
-			void eventsAvailable() override {}
-
-			void handleParameterEvent(const RNBO::ParameterEvent& event) override;
-			void handlePresetEvent(const RNBO::PresetEvent& event) override;
-
-		private:
-			bool				_isSettingPresetSync = false;
-			JuceAudioProcessor& _owner;
-		};
-
 		//==============================================================================
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JuceAudioProcessor)
 
 		RNBO::MidiEventList						_midiInput;
 		RNBO::MidiEventList						_midiOutput;
 		std::unique_ptr<RNBO::PresetList>	_presetList;
-		SyncEventHandler						_syncEventHandler;
-		RNBO::ParameterEventInterfaceUniquePtr	_syncParamInterface;
+		RNBO::ConstPresetPtr _initialPreset;
 		int										_currentPresetIdx;
 		bool									_isInStartup = false;
 		bool									_isSettingPresetAsync = false;
@@ -331,8 +313,7 @@ namespace RNBO {
 
 		String getText (float value, int maximumStringLength) const override
 		{
-			// we want to print the normalized value
-			long displayValue = (long)_rnboObject.convertFromNormalizedParameterValue(_index, value);
+			auto displayValue = juce::roundToInt(_rnboObject.convertFromNormalizedParameterValue(_index, value));
 			String v;
 			if (displayValue >= 0 && static_cast<Index>(displayValue) < _enumValues.size()) {
 				v = _enumValues[static_cast<Index>(displayValue)];

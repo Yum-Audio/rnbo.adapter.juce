@@ -43,7 +43,7 @@ set(PLUGIN_NEEDS_MIDI_INPUT OFF CACHE BOOL "Does the plugin need midi input?")
 set(PLUGIN_NEEDS_MIDI_OUTPUT OFF CACHE BOOL "Does the plugin need midi output?")
 set(PLUGIN_IS_MIDI_EFFECT OFF CACHE BOOL "Is this plugin a MIDI effect?")
 #set(PLUGIN_EDITOR_WANTS_KEYBOARD_FOCUS OFF CACHE BOOL "Does the editor need keyboard focus?")
-set(PLUGIN_PARAM_DEFAULT_NOTIFY OFF CACHE BOOL "Should parameter changes from inside your rnbo patch send output by default? Sometimes breaks automation.")
+set(PLUGIN_PARAM_DEFAULT_NOTIFY On CACHE BOOL "Should parameter changes from inside your rnbo patch send output by default? Sometimes breaks automation.")
 
 set(CONAN_PROFILE "default" CACHE STRING "The profile to use for building conan deps, this is useful for cross compiling")
 
@@ -117,6 +117,38 @@ include(${RNBO_CPP_DIR}/cmake/RNBODescriptionHeader.cmake)
 set(DESCRIPTION_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
 rnbo_write_description_header_if_exists(${RNBO_DESCRIPTION_FILE} ${DESCRIPTION_INCLUDE_DIR} ${RNBO_PRESETS_FILE})
 
+if (LINUX)
+	conan_cmake_configure(
+		REQUIRES libalsa/1.2.10
+		GENERATORS cmake_find_package
+		OPTIONS libalsa:shared=True
+	)
+	conan_cmake_install(
+		PATH_OR_REFERENCE .
+		BUILD missing
+		PROFILE_HOST ${CONAN_PROFILE}
+		PROFILE_BUILD default
+		SETTINGS_HOST build_type=${CMAKE_BUILD_TYPE}
+		SETTINGS_BUILD build_type=${CMAKE_BUILD_TYPE}
+	)
+	find_package(ALSA 1.2.10 REQUIRED)
+
+	conan_cmake_configure(
+		REQUIRES freetype/2.13.2
+		GENERATORS cmake_find_package
+		OPTIONS freetype:shared=True
+	)
+	conan_cmake_install(
+		PATH_OR_REFERENCE .
+		BUILD missing
+		PROFILE_HOST ${CONAN_PROFILE}
+		PROFILE_BUILD default
+		SETTINGS_HOST build_type=${CMAKE_BUILD_TYPE}
+		SETTINGS_BUILD build_type=${CMAKE_BUILD_TYPE}
+	)
+	find_package(Freetype 2.13.2 REQUIRED)
+endif()
+
 #compute the PLUGIN_TYPE
 if (PLUGIN_IS_SYNTH)
 	set(PLUGIN_TYPE "AudioSynth")
@@ -167,7 +199,7 @@ if (PLUGIN_PARAM_DEFAULT_NOTIFY)
 endif()
 
 
-link_directories(${JUCEStaticPlugin_LIB_DIRS})
+link_directories(${JUCEStaticPlugin_LIB_DIRS} ${ALSA_LIB_DIRS} ${Freetype_LIB_DIRS})
 
 function(setup_common target_name target_type suffix bundle_extension)
 	add_library(${target_name} MODULE)
@@ -229,6 +261,8 @@ function(setup_common target_name target_type suffix bundle_extension)
 		${RNBO_CPP_DIR}/src/3rdparty/
 		${JUCEStaticPlugin_INCLUDE_DIRS}
 		${DESCRIPTION_INCLUDE_DIR}
+		${ALSA_INCLUDE_DIRS}
+		${Freetype_INCLUDE_DIRS}
 	)
 	target_link_libraries(${target_name}
 		PRIVATE
