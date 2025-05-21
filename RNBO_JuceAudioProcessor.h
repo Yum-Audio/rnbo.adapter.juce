@@ -74,7 +74,7 @@ namespace RNBO {
 		public CoreObjectHolder,
 		public juce::AudioProcessor,
 		public juce::AsyncUpdater,
-		private juce::Thread
+		private juce::ThreadPoolJob
 	{
 		using String = juce::String;
 	public:
@@ -134,7 +134,17 @@ namespace RNBO {
 		void handleMessageEvent(const RNBO::MessageEvent& event) override;
 
 		//background thread
-		void run() override;
+		juce::ThreadPoolJob::JobStatus runJob() override;
+
+        class ThreadPool : public juce::ThreadPool 
+        {
+        public:
+            ThreadPool () : juce::ThreadPool (juce::ThreadPoolOptions ().withThreadName ("RNBO")) { }
+        };
+
+        juce::SharedResourcePointer<ThreadPool> threadpool;
+        juce::Atomic<bool> runAgain{ false };
+        void addJob ();
 
 		void addDataRefListener(juce::MessageListener * listener);
 
