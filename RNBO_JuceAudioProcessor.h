@@ -73,8 +73,8 @@ namespace RNBO {
 		public RNBO::EventHandler,
 		public CoreObjectHolder,
 		public juce::AudioProcessor,
-		public juce::AsyncUpdater,
-		private juce::Thread
+		public juce::AsyncUpdater
+		// private juce::Thread //background thread - disabled on Yum Audio repo, not needed on our plugins
 	{
 		using String = juce::String;
 	public:
@@ -133,8 +133,8 @@ namespace RNBO {
 		void handlePresetEvent(const RNBO::PresetEvent& event) override;
 		void handleMessageEvent(const RNBO::MessageEvent& event) override;
 
-		//background thread
-		void run() override;
+		//background thread - disabled on Yum Audio repo, not needed on our plugins
+		// void run() override;
 
 		void addDataRefListener(juce::MessageListener * listener);
 

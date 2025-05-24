@@ -114,7 +114,7 @@ JuceAudioProcessor::JuceAudioProcessor(
 		    JuceAudioProcessor::makeBusesPropertiesForRNBOObject(_rnboObject, patcher_desc)
 #endif
 	)
-	, Thread("fileLoadAndDealloc")
+	// , Thread("fileLoadAndDealloc") //background thread - disabled on Yum Audio repo, not needed on our plugins
 	, _currentPresetIdx(0)
 {
 	_dataRefCleanupQueue = make_unique<moodycamel::ReaderWriterQueue<char *, 32>>(static_cast<size_t>(32));
@@ -203,13 +203,13 @@ JuceAudioProcessor::JuceAudioProcessor(
 	}
 
 	//start audio loading/dealloc thread
-	startThread();
+	// startThread();
 }
 
 JuceAudioProcessor::~JuceAudioProcessor()
 {
 	//stop audio loading/dealloc thread
-	stopThread(200);
+	// stopThread(200);
 }
 
 #ifdef JUCE_STATIC_PLUGIN
@@ -276,26 +276,27 @@ void JuceAudioProcessor::handleMessageEvent(const RNBO::MessageEvent& event) {
 	}
 }
 
-void JuceAudioProcessor::run() {
-	while (! threadShouldExit())
-	{
-		std::pair<juce::String, juce::File> load;
-		while (_dataRefLoadQueue->try_dequeue(load)) {
-			auto refName = load.first;
-			auto file = load.second;
-			std::unique_ptr<juce::AudioFormatReader> reader (_formatManager.createReaderFor (file));
-			loadDataRef(refName, file.getFileName(), std::move(reader));
-		}
+//background thread - disabled on Yum Audio repo, not needed on our plugins
+// void JuceAudioProcessor::run() {
+// 	while (! threadShouldExit())
+// 	{
+// 		std::pair<juce::String, juce::File> load;
+// 		while (_dataRefLoadQueue->try_dequeue(load)) {
+// 			auto refName = load.first;
+// 			auto file = load.second;
+// 			std::unique_ptr<juce::AudioFormatReader> reader (_formatManager.createReaderFor (file));
+// 			loadDataRef(refName, file.getFileName(), std::move(reader));
+// 		}
 
-		//cleanup any buffers we need to dealloc
-		char * b;
-		while (_dataRefCleanupQueue->try_dequeue(b)) {
-			delete [] b;
-		}
+// 		//cleanup any buffers we need to dealloc
+// 		char * b;
+// 		while (_dataRefCleanupQueue->try_dequeue(b)) {
+// 			delete [] b;
+// 		}
 
-		wait (500);
-	}
-}
+// 		wait (500);
+// 	}
+// }
 
 void JuceAudioProcessor::addDataRefListener(juce::MessageListener * listener) {
 	std::lock_guard g(_loadedDataRefsMutex);
@@ -313,8 +314,9 @@ juce::String JuceAudioProcessor::loadedDataRefFile(const juce::String refName) {
 }
 
 void JuceAudioProcessor::loadDataRef(const juce::String refName, const juce::File file) {
-	_dataRefLoadQueue->enqueue(std::make_pair(refName, file));
-	notify();//wakeup
+	jassertfalse; //not used on Yum Audio repo and derived products. If you end up calling in here, make sure to re-implement the Thread (just uncomment all the parts)
+    _dataRefLoadQueue->enqueue(std::make_pair(refName, file));
+	// notify();//wakeup
 }
 
 void JuceAudioProcessor::loadDataRef(const juce::String refName, const juce::String fileName, std::unique_ptr<juce::AudioFormatReader> reader) {
