@@ -328,16 +328,19 @@ function(setup_common target_name target_type suffix bundle_extension)
 	endif()
 endfunction()
 
-set(SRC_FILES 
-		common.cpp
+set(SRC_FILES
+		"${CMAKE_CURRENT_LIST_DIR}/common.cpp"
 		${RNBO_CLASS_FILE}
 		${RNBO_CPP_DIR}/RNBO.cpp
 		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessor.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessorEditor.cpp"
 )
 
-#append, may be an empty list
-list(APPEND SRC_FILES ${RNBO_EXTRA_SOURCE_FILES})
+foreach(extra IN LISTS RNBO_EXTRA_SOURCE_FILES)
+	#files are in a string, update to mimic behavior of FILEPATH cache var
+	file(REAL_PATH ${extra} extra BASE_DIRECTORY ${CMAKE_BINARY_DIR})
+	list(APPEND SRC_FILES ${extra})
+endforeach()
 
 if (EXISTS ${RNBO_BINARY_DATA_FILE})
 	list(APPEND SRC_FILES ${RNBO_BINARY_DATA_FILE})
@@ -352,7 +355,7 @@ if (
 	setup_common(RNBOVST3Plugin VST3 vst3 vst3)
 	target_sources(RNBOVST3Plugin
 		PRIVATE
-		vst3.cpp
+		"${CMAKE_CURRENT_LIST_DIR}/vst3.cpp"
 		${SRC_FILES}
 	)
 endif()
@@ -383,7 +386,7 @@ if (
 	target_sources(RNBOUnityPlugin
 		PRIVATE
 		${script_file}
-		unity.cpp
+		"${CMAKE_CURRENT_LIST_DIR}/unity.cpp"
 		${SRC_FILES}
 	)
 
@@ -405,7 +408,7 @@ if(APPLE AND PLUGIN_AU_MAC)
 	setup_common(RNBOAUPlugin AU component component)
 	target_sources(RNBOAUPlugin
 		PRIVATE
-		au.cpp
+		"${CMAKE_CURRENT_LIST_DIR}/au.cpp"
 		${SRC_FILES}
 	)
 endif()
