@@ -53,6 +53,7 @@ set(RNBO_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../codegen/xa
 set(RNBO_PRESETS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../codegen/xam/test/presets.json" CACHE FILEPATH "path to presets.json")
 set(RNBO_BINARY_DATA_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../codegen/xam/test/rnbomatic_binary.cpp" CACHE FILEPATH "path to rnbomatic_binary.cpp if it exists")
 set(RNBO_BINARY_DATA_STORAGE_NAME "rnbomatic_binary" CACHE STRING "name of the extern binary data")
+set(RNBO_EXTRA_SOURCE_FILES "" CACHE STRING "A list of paths of any additional CPP files to compile into the project")
 
 set(PLUGIN_NUM_MIDI_INPUTS 0 CACHE STRING "Number of MIDI input ports")
 set(PLUGIN_NUM_MIDI_OUTPUTS 0 CACHE STRING "Number of MIDI output ports")
@@ -327,6 +328,20 @@ function(setup_common target_name target_type suffix bundle_extension)
 	endif()
 endfunction()
 
+set(SRC_FILES 
+		common.cpp
+		${RNBO_CLASS_FILE}
+		${RNBO_CPP_DIR}/RNBO.cpp
+		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessor.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessorEditor.cpp"
+)
+
+#append, may be an empty list
+list(APPEND SRC_FILES ${RNBO_EXTRA_SOURCE_FILES})
+
+if (EXISTS ${RNBO_BINARY_DATA_FILE})
+	list(APPEND SRC_FILES ${RNBO_BINARY_DATA_FILE})
+endif()
 
 #VST3
 if (
@@ -338,16 +353,8 @@ if (
 	target_sources(RNBOVST3Plugin
 		PRIVATE
 		vst3.cpp
-		common.cpp
-		${RNBO_CLASS_FILE}
-		${RNBO_CPP_DIR}/RNBO.cpp
-		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessor.cpp"
-		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessorEditor.cpp"
+		${SRC_FILES}
 	)
-
-	if (EXISTS ${RNBO_BINARY_DATA_FILE})
-		target_sources(RNBOVST3Plugin PRIVATE ${RNBO_BINARY_DATA_FILE})
-	endif()
 endif()
 
 
@@ -376,16 +383,9 @@ if (
 	target_sources(RNBOUnityPlugin
 		PRIVATE
 		${script_file}
-		common.cpp
 		unity.cpp
-		${RNBO_CLASS_FILE}
-		${RNBO_CPP_DIR}/RNBO.cpp
-		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessor.cpp"
-		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessorEditor.cpp"
+		${SRC_FILES}
 	)
-	if (EXISTS ${RNBO_BINARY_DATA_FILE})
-		target_sources(RNBOUnityPlugin PRIVATE ${RNBO_BINARY_DATA_FILE})
-	endif()
 
 	if (APPLE)
 		set_source_files_properties("${script_file}" PROPERTIES
@@ -406,13 +406,6 @@ if(APPLE AND PLUGIN_AU_MAC)
 	target_sources(RNBOAUPlugin
 		PRIVATE
 		au.cpp
-		common.cpp
-		${RNBO_CLASS_FILE}
-		${RNBO_CPP_DIR}/RNBO.cpp
-		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessor.cpp"
-		"${CMAKE_CURRENT_LIST_DIR}/../RNBO_JuceAudioProcessorEditor.cpp"
+		${SRC_FILES}
 	)
-	if (EXISTS ${RNBO_BINARY_DATA_FILE})
-		target_sources(RNBOAUPlugin PRIVATE ${RNBO_BINARY_DATA_FILE})
-	endif()
 endif()
