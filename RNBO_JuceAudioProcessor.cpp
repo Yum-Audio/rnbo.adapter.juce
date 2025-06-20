@@ -102,16 +102,15 @@ JuceAudioProcessor::JuceAudioProcessor(
 		const nlohmann::json& presets,
 		const RNBO::BinaryData& data,
 		JuceAudioParameterFactory* paramFactory,
-        BusesProperties* busesProperties
+        const BusesProperties& busesProperties
 		)
 	: CoreObjectHolder(this)
 	, AudioProcessor(
 #ifdef PLUGIN_BUSES_PROPERTIES
 		PLUGIN_BUSES_PROPERTIES
 #else
-        busesProperties ?
-            *busesProperties :
-		    JuceAudioProcessor::makeBusesPropertiesForRNBOObject(_rnboObject, patcher_desc)
+        busesProperties 
+        // JuceAudioProcessor::makeBusesPropertiesForRNBOObject(_rnboObject, patcher_desc)
 #endif
 	)
 	// , Thread("fileLoadAndDealloc") //background thread - disabled on Yum Audio repo, not needed on our plugins
