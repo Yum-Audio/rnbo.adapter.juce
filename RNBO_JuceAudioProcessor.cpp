@@ -349,7 +349,8 @@ void JuceAudioProcessor::loadDataRef(const juce::String refName, const juce::Str
 							bufferType,
 							[this](RNBO::ExternalDataId, char* d) {
 								//hold onto shared_ptr until rnbo stops using it
-								_dataRefCleanupQueue->enqueue(d);
+                                if (_dataRefCleanupQueue)
+								    _dataRefCleanupQueue->enqueue(d);
 							}
 					);
 					_loadedDataRefs.insert({refName, fileName});
