@@ -17,6 +17,8 @@
 #include <sstream>
 #include <algorithm>
 
+#include <melatonin_perfetto/melatonin_perfetto/melatonin_perfetto.h>
+
 //TODO get rid of this
 using namespace juce;
 
@@ -474,6 +476,8 @@ bool JuceAudioProcessor::isBusesLayoutSupported (const BusesLayout& /*layouts*/)
 
 void JuceAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    TRACE_DSP();
+
 	auto samples = static_cast<Index>(buffer.getNumSamples());
 	auto tc = preProcess(midiMessages);
 	_rnboObject.process(
