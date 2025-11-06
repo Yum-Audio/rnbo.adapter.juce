@@ -94,6 +94,7 @@ namespace RNBO {
 		static BusesProperties makeBusesPropertiesForRNBOObject(RNBO::CoreObject &object, const nlohmann::json& patcher_description);
 
 		bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+		bool supportsDoublePrecisionProcessing() const override
 
 		void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 		void processBlock (juce::AudioBuffer<double>&, juce::MidiBuffer&) override;
