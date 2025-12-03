@@ -460,6 +460,13 @@ void JuceAudioProcessor::changeProgramName (int index, const String& newName)
 void JuceAudioProcessor::prepareToPlay(double sampleRate, int estimatedSamplesPerBlock)
 {
 	_rnboObject.prepareToProcess(sampleRate, static_cast<Index>(estimatedSamplesPerBlock));
+
+    const auto numChannels = jmax (_rnboObject.getNumInputChannels (), _rnboObject.getNumOutputChannels ());
+    
+    if (sizeof (RNBO::SampleValue) == sizeof (float))
+        fTempOutputBuffer.setSize (numChannels, estimatedSamplesPerBlock);
+    else
+        dTempOutputBuffer.setSize (numChannels, estimatedSamplesPerBlock);
 }
 
 void JuceAudioProcessor::releaseResources()
@@ -485,12 +492,21 @@ void JuceAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
 	ScopedNoDenormals noDenormals;
 	auto samples = static_cast<Index>(buffer.getNumSamples());
 	auto tc = preProcess(midiMessages);
+
+    // ensure size by only increasing when needed
+    fTempOutputBuffer.setSize (buffer.getNumChannels (), buffer.getNumSamples (), false, false, true);
+
 	_rnboObject.process(
 			buffer.getArrayOfReadPointers(), static_cast<Index>(buffer.getNumChannels()),
-			buffer.getArrayOfWritePointers(), static_cast<Index>(buffer.getNumChannels()),
+			fTempOutputBuffer.getArrayOfWritePointers(), static_cast<Index>(buffer.getNumChannels()),
 			samples,
 			&_midiInput, &_midiOutput
 			);
+
+    // copy temp output buffer to output buffer
+    for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+        buffer.copyFrom (ch, 0, fTempOutputBuffer, ch, 0, buffer.getNumSamples());
+
 	postProcess(tc, midiMessages);
 }
 
@@ -503,12 +519,21 @@ void JuceAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::
 	ScopedNoDenormals noDenormals;
 	auto samples = static_cast<Index>(buffer.getNumSamples());
 	auto tc = preProcess(midiMessages);
+
+    // ensure size by only increasing when needed
+    dTempOutputBuffer.setSize (buffer.getNumChannels (), buffer.getNumSamples (), false, false, true);
+
 	_rnboObject.process(
 			buffer.getArrayOfReadPointers(), static_cast<Index>(buffer.getNumChannels()),
-			buffer.getArrayOfWritePointers(), static_cast<Index>(buffer.getNumChannels()),
+			dTempOutputBuffer.getArrayOfWritePointers(), static_cast<Index>(buffer.getNumChannels()),
 			samples,
 			&_midiInput, &_midiOutput
 			);
+
+    // copy temp output buffer to output buffer
+    for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+        buffer.copyFrom (ch, 0, dTempOutputBuffer, ch, 0, buffer.getNumSamples());
+
 	postProcess(tc, midiMessages);
 }
 

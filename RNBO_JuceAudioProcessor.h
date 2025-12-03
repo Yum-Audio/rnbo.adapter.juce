@@ -147,6 +147,10 @@ namespace RNBO {
 		TimeConverter preProcess(juce::MidiBuffer& midiMessages);
 		void postProcess(TimeConverter& timeConverter, juce::MidiBuffer& midiMessages);
 
+        // rnbo seems to expect different buffers for input and output to work correctly
+        juce::AudioBuffer<float> fTempOutputBuffer;
+        juce::AudioBuffer<double> dTempOutputBuffer;
+
 		//==============================================================================
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (JuceAudioProcessor)
 
