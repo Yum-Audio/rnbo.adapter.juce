@@ -120,7 +120,7 @@ JuceAudioProcessor::JuceAudioProcessor(
 	// , Thread("fileLoadAndDealloc") //background thread - disabled on Yum Audio repo, not needed on our plugins
 	, _currentPresetIdx(0)
 {
-	_dataRefCleanupQueue = make_unique<moodycamel::ReaderWriterQueue<char *, 32>>(static_cast<size_t>(32));
+	_dataRefCleanupQueue = std::make_shared<moodycamel::ReaderWriterQueue<char *, 32>>(static_cast<size_t>(32));
 	_dataRefLoadQueue = make_unique<moodycamel::ReaderWriterQueue<std::pair<juce::String, juce::File>, 32>>(static_cast<size_t>(32));
 
 	_formatManager.registerBasicFormats();
@@ -351,10 +351,10 @@ void JuceAudioProcessor::loadDataRef(const juce::String refName, const juce::Str
 							reinterpret_cast<char *>(data),
 							samps * sizeof(float),
 							bufferType,
-							[this](RNBO::ExternalDataId, char* d) {
+							[cleanUpQueue = _dataRefCleanupQueue](RNBO::ExternalDataId, char* d) {
 								//hold onto shared_ptr until rnbo stops using it
-                                if (_dataRefCleanupQueue)
-								    _dataRefCleanupQueue->enqueue(d);
+								if (cleanUpQueue)
+									cleanUpQueue->enqueue(d);
 							}
 					);
 					_loadedDataRefs.insert({refName, fileName});
