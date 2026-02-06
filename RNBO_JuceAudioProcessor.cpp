@@ -531,7 +531,7 @@ void JuceAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer, juce::
 			);
 
     // copy temp output buffer to output buffer
-    for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+    for (int ch = 0; ch < jmin (dTempOutputBuffer.getNumChannels (), buffer.getNumChannels()); ++ch)
         buffer.copyFrom (ch, 0, dTempOutputBuffer, ch, 0, buffer.getNumSamples());
 
 	postProcess(tc, midiMessages);
